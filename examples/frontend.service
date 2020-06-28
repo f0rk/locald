@@ -1,0 +1,4 @@
+[service]
+id=frontend
+command=/usr/bin/env python3 frontend.py
+requires=backend

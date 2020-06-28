@@ -14,22 +14,22 @@ it, you define any locald settings and any services locald should be managing.
 A basic configuration that manages two services might look like:
 ```!ini
 [locald]
-pid_file=/tmp/myproject.pid
+pid_path=/tmp/myproject.pid
 
 [cart_api]
-service_file=cart.myproject.com/backend/myproject_cart_api/locald.service
+service_path=cart.myproject.com/backend/myproject_cart_api/locald.service
 
 [cart_www]
-service_file=cart.myproject.com/frontend/locald.service
+service_path=cart.myproject.com/frontend/locald.service
 ```
 
-In this case, we define a `pid_file` for this specific instance of locald (as
+In this case, we define a `pid_path` for this specific instance of locald (as
 you can run many, it is good to make them unique) and two services: a backend
 API service (for example, flask application that you are running locally and a
 frontend service, perhaps a react.js application.
 
 Services can be defined either directly in the locald.ini file or using the
-`service_file` directive, as shown here.
+`service_path` directive, as shown here.
 
 Configuration files for these services might look like:
 ```!ini

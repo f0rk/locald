@@ -11,6 +11,7 @@ setup(
     author_email="ryan@ryankelly.us",
     url="https://github.com/f0rk/locald",
     install_requires=[
+        "daemonize",
     ],
     tests_require=[
         "pytest",

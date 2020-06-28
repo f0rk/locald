@@ -1,2 +1,0 @@
-class Manager(object):
-    pass
