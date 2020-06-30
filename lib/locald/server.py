@@ -4,14 +4,13 @@ import logging.config
 import os
 import queue
 import select
-import shlex
 import socket
-import subprocess
 import traceback
 
 from daemonize import Daemonize
 
 from .config import get_config
+from .service import Service
 
 
 logger = logging.getLogger()
@@ -69,6 +68,9 @@ class Server(object):
         except:
             logger.error(traceback.format_exc())
             raise
+        finally:
+            for proc in self.processes.values():
+                proc.kill()
 
     def _run(self):
 
@@ -145,6 +147,11 @@ class Server(object):
                     try:
                         next_message = messages_queue[s].get_nowait()
                         response = self.process_message(next_message)
+                    except KeyError:
+                        logger.warning(
+                            "[locald] output queue for {} is missing"
+                            .format(s)
+                        )
                     except queue.Empty:
                         logger.info(
                             "[locald] output queue for {} is empty"
@@ -223,9 +230,6 @@ class Server(object):
 
     def start_service(self, name):
 
-        if name in self.processes:
-            return ["'{}' is already running".format(name)], False
-
         service_config = self.config_for_service(name)
 
         requires = []
@@ -245,10 +249,11 @@ class Server(object):
             if is_error:
                 return messages, True
 
-        args = shlex.split(service_config["service"]["command"])
+        if name not in self.processes:
+            proc = Service(name, service_config)
+            self.processes[name] = proc
 
-        proc = subprocess.Popen(args)
-        self.processes[name] = proc
+        self.processes[name].start()
 
         messages.append("started '{}'".format(name))
 
@@ -266,8 +271,7 @@ class Server(object):
         if name not in self.processes:
             message = "'{}' is not running".format(name)
         else:
-            proc = self.processes[name]
-            proc.kill()
+            self.processes[name].kill()
 
             message = "kill signal sent to '{}'".format(name)
 
@@ -285,13 +289,10 @@ class Server(object):
             }
 
         if name in self.processes:
-            proc = self.processes[name]
-            returncode = proc.poll()
-            if returncode is not None:
-                del self.processes[name]
-                status = "NOT running"
-            else:
+            if self.processes[name].is_running():
                 status = "running"
+            else:
+                status = "NOT running"
         else:
             status = "NOT running"
 
@@ -311,16 +312,8 @@ class Server(object):
         }
 
     def tend_processes(self):
-
-        for name, proc in list(self.processes.items()):
-            returncode = proc.poll()
-            if returncode is not None:
-                logger.info(
-                    "[locald] process {} pid {} exited with {}"
-                    .format(name, proc.pid, returncode)
-                )
-
-                del self.processes[name]
+        for proc in self.processes.values():
+            proc.tend()
 
 
 def get_pid(pid_path):

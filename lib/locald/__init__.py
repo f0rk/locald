@@ -1,3 +1,3 @@
 # Copyright 2020, Ryan P. Kelly.
 
-__version__ = "0.1"
+__version__ = "0.2"

@@ -1,3 +1,5 @@
 [service]
 id=internal
 command=/usr/bin/env python3 internal.py
+restart=always
+restart_seconds=5
