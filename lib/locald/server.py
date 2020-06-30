@@ -290,11 +290,11 @@ class Server(object):
 
         if name in self.processes:
             if self.processes[name].is_running():
-                status = "running"
+                status = "service {} is running".format(name)
             else:
-                status = "NOT running"
+                status = "service {} is NOT running".format(name)
         else:
-            status = "NOT running"
+            status = "service {} is NOT running".format(name)
 
         return {
             "messages": [status],

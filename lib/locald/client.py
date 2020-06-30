@@ -1,6 +1,8 @@
 import json
 import socket
 
+from .server import is_server_running
+
 
 class Client(object):
 
@@ -45,6 +47,16 @@ class Client(object):
         try:
             sock = self.connect()
             response = self.send(sock, command)
+        except FileNotFoundError:
+            if is_server_running(self.config):
+                message = "sending command failed. are your socket permissions correct?"
+            else:
+                message = "sending command failed. server does not appear to be running."
+
+            response = {
+                "messages": [message],
+            }
+
         finally:
             if sock is not None:
                 sock.close()
@@ -60,7 +72,8 @@ class Client(object):
 
         response = self.send_command(command)
 
-        print(response)
+        for message in response["messages"]:
+            print(message)
 
     def stop(self, name):
 
@@ -71,7 +84,8 @@ class Client(object):
 
         response = self.send_command(command)
 
-        print(response)
+        for message in response["messages"]:
+            print(message)
 
     def status(self, names):
 
@@ -82,4 +96,5 @@ class Client(object):
 
         response = self.send_command(command)
 
-        print(response)
+        for message in response["messages"]:
+            print(message)
