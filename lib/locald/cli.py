@@ -1,10 +1,12 @@
 # Copyright 2020, Ryan P. Kelly.
 
 import argparse
+import os
+import shutil
 import sys
 
 from locald.client import Client
-from locald.config import get_config
+from locald.config import get_config, get_config_for_service
 from locald.server import ensure_server, is_server_running, stop_server
 
 
@@ -51,6 +53,11 @@ class App(object):
 
         status_parser.add_argument("names")
 
+        logs_parser = subparsers.add_parser("logs")
+        logs_parser.set_defaults(func=self.logs)
+
+        logs_parser.add_argument("names")
+
         args = parser.parse_args()
 
         if not args.command:
@@ -90,3 +97,40 @@ class App(object):
             sys.stdout.write("daemon NOT running\n")
             sys.stdout.flush()
             sys.exit(1)
+
+    def logs(self, config, args):
+
+        names = [n.strip() for n in args.names.split(",") if n.strip()]
+
+        if "ALL" in names:
+            for key, values in config.items():
+                if "service_path" in values:
+                    names.append(key)
+
+            names.remove("ALL")
+            names = list(set(names))
+
+        log_paths = []
+        for name in names:
+            service_config = get_config_for_service(config, name)
+
+            if "log" not in service_config["service"]:
+                continue
+
+            log_paths.append(service_config["service"]["log"])
+
+        if not log_paths:
+            sys.stderr.write("NO logs to tail\n")
+            sys.stderr.flush()
+            sys.exit(1)
+
+        tail_args = [
+            "tail",
+            "-F",
+        ]
+
+        tail_args.extend(log_paths)
+
+        exec_path = shutil.which(tail_args[0])
+
+        os.execv(exec_path, tail_args)

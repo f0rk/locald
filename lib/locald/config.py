@@ -54,3 +54,25 @@ def get_config(config_path):
     config[key]["config_dir"] = config_dir
 
     return config
+
+
+def get_config_for_service(config, name):
+
+    service_config_path = config[name]["service_path"]
+
+    # relative paths are resolved based on the base config's location
+    if not os.path.isabs(service_config_path):
+        config_dir = config["locald"]["config_dir"]
+        service_config_path = os.path.join(config_dir, service_config_path)
+
+    service_config = get_config(service_config_path)
+
+    if "log" in service_config:
+        log_path = service_config["log"]
+        if  not os.path.isabs(log_path):
+            config_dir = config["locald"]["config_dir"]
+            log_path = os.path.join(config_dir, log_path)
+
+        service_config["log"] = log_path
+
+    return service_config

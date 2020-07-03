@@ -23,6 +23,21 @@ class Service(object):
                 "[locald] service {} pid {} exited with {}"
                 .format(self.name, self.process.pid, returncode)
             )
+
+            if self.process is not None:
+
+                file_handles = [
+                    self.process.stdout,
+                    self.process.stderr,
+                ]
+
+                for file_handle in file_handles:
+                    if hasattr(file_handle, "close"):
+                        try:
+                            file_handle.close()
+                        except:
+                            pass
+
             self.process = None
             if not self.was_killed:
                 self.dead_since = datetime.datetime.now()
@@ -56,8 +71,22 @@ class Service(object):
             .format(self.name)
         )
 
+        popen_args = {}
+        if self.config["service"].get("log"):
+            log_fp = open(self.config["service"]["log"], "ab+", buffering=0)
+            popen_args = {
+                "stdout": log_fp,
+                "stderr": subprocess.STDOUT,
+            }
+
+        #if self.name == "backend":
+        #    raise Exception(popen_args)
+
         args = shlex.split(self.config["service"]["command"])
-        self.process = subprocess.Popen(args)
+        self.process = subprocess.Popen(
+            args,
+            **popen_args,
+        )
         self.dead_since = None
         self.was_killed = False
 

@@ -2,3 +2,4 @@
 id=backend
 command=/usr/bin/env python3 backend.py
 requires=internal
+log=/tmp/backend.log

@@ -9,7 +9,7 @@ import traceback
 
 from daemonize import Daemonize
 
-from .config import get_config
+from .config import get_config, get_config_for_service
 from .service import Service
 
 
@@ -201,18 +201,6 @@ class Server(object):
         response = json.dumps(response).encode("utf-8")
         return response
 
-    def config_for_service(self, name):
-        service_config_path = self.config[name]["service_path"]
-
-        # relative paths are resolved based on the base config's location
-        if not os.path.isabs(service_config_path):
-            config_dir = self.config["locald"]["config_dir"]
-            service_config_path = os.path.join(config_dir, service_config_path)
-
-        name_config = get_config(service_config_path)
-
-        return name_config
-
     def handle_start(self, command):
 
         name = command["name"]
@@ -230,7 +218,7 @@ class Server(object):
 
     def start_service(self, name):
 
-        service_config = self.config_for_service(name)
+        service_config = get_config_for_service(self.config, name)
 
         requires = []
         if "requires" in service_config["service"]:
