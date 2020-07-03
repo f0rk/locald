@@ -5,13 +5,14 @@ from setuptools import setup
 
 setup(
     name="locald",
-    version="0.4",
+    version="0.5",
     description="run local services/microservices for development",
     author="Ryan P. Kelly",
     author_email="ryan@ryankelly.us",
     url="https://github.com/f0rk/locald",
     install_requires=[
         "daemonize",
+        "psutil",
     ],
     tests_require=[
         "pytest",

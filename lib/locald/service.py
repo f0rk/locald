@@ -1,7 +1,10 @@
 import datetime
 import logging
 import shlex
+import signal
 import subprocess
+
+import psutil
 
 
 logger = logging.getLogger()
@@ -99,6 +102,13 @@ class Service(object):
     def kill(self):
         if self.process is None:
             return
+
+        parent = psutil.Process(self.process.pid)
+        to_kill = parent.children(recursive=True)
+        to_kill.append(parent)
+
+        for p in to_kill:
+            p.send_signal(signal.SIGKILL)
 
         self.process.kill()
         self.was_killed = True

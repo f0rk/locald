@@ -9,7 +9,7 @@ import traceback
 
 from daemonize import Daemonize
 
-from .config import get_config, get_config_for_service
+from .config import get_config_for_service
 from .service import Service
 
 
@@ -352,7 +352,17 @@ def ensure_server(config, args):
         server = create_server(config)
 
         if args.no_daemonize:
-            server.start()
+            pid_path = config["locald"]["pid_path"]
+            try:
+                with open(pid_path, "wt") as pid_fp:
+                    pid_fp.write(str(os.getpid()))
+                    pid_fp.flush()
+                    server.start()
+            finally:
+                try:
+                    os.unlink(pid_path)
+                except:
+                    pass
         else:
             daemon = create_daemon(config, server)
             daemon.start()

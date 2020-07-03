@@ -70,6 +70,20 @@ class App(object):
 
         return returncode
 
+    def get_services(self, config, args_names):
+
+        names = [n.strip() for n in args_names.split(",") if n.strip()]
+
+        if "ALL" in names:
+            for key, values in config.items():
+                if "service_path" in values:
+                    names.append(key)
+
+            names.remove("ALL")
+            names = list(set(names))
+
+        return names
+
     def start(self, config, args):
         client = Client(config)
         client.start(args.name)
@@ -86,7 +100,15 @@ class App(object):
         ensure_server(config, args)
 
     def server_stop(self, config, args):
-        stop_server(config)
+        if is_server_running(config):
+
+            client = Client(config)
+
+            names = self.get_services(config, "ALL")
+            for name in names:
+                client.stop(name)
+
+            stop_server(config)
 
     def server_status(self, config, args):
         if is_server_running(config):
@@ -100,15 +122,7 @@ class App(object):
 
     def logs(self, config, args):
 
-        names = [n.strip() for n in args.names.split(",") if n.strip()]
-
-        if "ALL" in names:
-            for key, values in config.items():
-                if "service_path" in values:
-                    names.append(key)
-
-            names.remove("ALL")
-            names = list(set(names))
+        names = self.get_services(config, args.names)
 
         log_paths = []
         for name in names:
