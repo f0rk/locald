@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name="locald",
-    version="0.3",
+    version="0.4",
     description="run local services/microservices for development",
     author="Ryan P. Kelly",
     author_email="ryan@ryankelly.us",

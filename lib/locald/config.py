@@ -67,12 +67,12 @@ def get_config_for_service(config, name):
 
     service_config = get_config(service_config_path)
 
-    if "log" in service_config:
-        log_path = service_config["log"]
+    if "log_path" in service_config:
+        log_path = service_config["log_path"]
         if  not os.path.isabs(log_path):
             config_dir = config["locald"]["config_dir"]
             log_path = os.path.join(config_dir, log_path)
 
-        service_config["log"] = log_path
+        service_config["log_path"] = log_path
 
     return service_config

@@ -72,8 +72,8 @@ class Service(object):
         )
 
         popen_args = {}
-        if self.config["service"].get("log"):
-            log_fp = open(self.config["service"]["log"], "ab+", buffering=0)
+        if self.config["service"].get("log_path"):
+            log_fp = open(self.config["service"]["log_path"], "ab+", buffering=0)
             popen_args = {
                 "stdout": log_fp,
                 "stderr": subprocess.STDOUT,

@@ -114,10 +114,10 @@ class App(object):
         for name in names:
             service_config = get_config_for_service(config, name)
 
-            if "log" not in service_config["service"]:
+            if "log_path" not in service_config["service"]:
                 continue
 
-            log_paths.append(service_config["service"]["log"])
+            log_paths.append(service_config["service"]["log_path"])
 
         if not log_paths:
             sys.stderr.write("NO logs to tail\n")
