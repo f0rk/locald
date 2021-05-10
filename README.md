@@ -5,6 +5,33 @@ locald
 in local development. It allows you to define service dependencies, restart
 behavior, etc.
 
+`locald` utilizes a client-server model whereby a server process manages your
+running services and cli client (`locald`) interacts with the server.
+
+Usage
+=====
+
+For help, run `locald --help`.
+
+`locald start <service>`: start the named service, and any dependencies.
+
+`locald stop <service>`: stop the named service. only stops the named service, not any services it depends on.
+
+`locald status`: show known services and their status.
+
+To stop all services, it is simplest to stop the server itself: `locald
+server-stop`. This will stop all child processes of the server.
+
+Logs can be retrieved with the `locald logs` command. Specify the name of the
+service to get logs for just that service as in `locald logs cart_api` or use
+the keyword `ALL` to get the logs for all services known to `locald`. This
+command will follow the log output.
+
+Install
+=======
+
+`pip install locald`
+
 Configuration
 =============
 
@@ -53,16 +80,35 @@ In this example, `cart_www` indicates that it requires `cart_api`. locald will
 determine that, if `locald start cart_www` is run, that `cart_api` must also be
 running, and will start it if it is not.
 
-Install
-=======
+Server logs can be configured using Python's standard logging configuration in
+the `locald.ini` file like so:
 
-`pip install locald`
+```!ini
+[loggers]
+keys=root
 
-Usage
-=====
+[logger_root]
+handlers=console,file
+level=NOTSET
 
-For full help, run `locald --help`.
+[handlers]
+keys=console,file
 
-`locald start <service>`: start the named service, and any dependencies.
-`locald stop <service>`: stop the named service. only stops the named service, not any services it depends on.
-`locald status`: show known services and their status.
+[handler_file]
+class=FileHandler
+formatter=basic
+level=NOTSET
+args=("/tmp/locald.log", "w")
+
+[handler_console]
+class=StreamHandler
+formatter=basic
+level=NOTSET
+args=(sys.stdout,)
+
+[formatters]
+keys=basic
+
+[formatter_basic]
+format=%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s
+```
