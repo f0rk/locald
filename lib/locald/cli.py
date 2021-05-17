@@ -91,6 +91,11 @@ class App(object):
     def stop(self, config, args):
         client = Client(config)
         client.stop(args.name)
+    
+    def restart(self, config, args):
+        client = Client(config)
+        client.stop(args.name)
+        client.start(args.name)
 
     def status(self, config, args):
         client = Client(config)
