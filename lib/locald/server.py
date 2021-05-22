@@ -273,9 +273,9 @@ class Server(object):
             status = "UNKNOWN_SERVICE"
         elif name in self.processes:
             if self.processes[name].is_running():
-                status = "RUNNING" # "service {} is running".format(name)
+                status = "RUNNING"
             else:
-                status = "STOPPED" # "service {} is NOT running".format(name)
+                status = "STOPPED"
         else:
             status = "NOT_STARTED"
 
