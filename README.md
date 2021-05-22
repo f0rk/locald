@@ -13,11 +13,17 @@ Usage
 
 For help, run `locald --help`.
 
+`locald server-start`: start the locald daemon.
+
+`locald server-stop`: stop the locald daemon.
+
 `locald start <service>`: start the named service, and any dependencies.
 
 `locald stop <service>`: stop the named service. only stops the named service, not any services it depends on.
 
-`locald status`: show known services and their status.
+`locald restart <service>`: restart the named service. will stop only the named service and start all dependencies.
+
+`locald status ALL`: show known services and their status.
 
 To stop all services, it is simplest to stop the server itself: `locald
 server-stop`. This will stop all child processes of the server.
