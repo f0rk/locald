@@ -191,6 +191,8 @@ class Server(object):
                 response = self.handle_start(data)
             elif command == "stop":
                 response = self.handle_stop(data)
+            elif command == "restart":
+                response = self.handle_restart(data)
             elif command == "status":
                 response = self.handle_status(data)
             else:

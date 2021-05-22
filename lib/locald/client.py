@@ -87,6 +87,18 @@ class Client(object):
         for message in response["messages"]:
             print(message)
 
+    def restart(self, name):
+
+        command = {
+            "command": "restart",
+            "name": name,
+        }
+
+        response = self.send_command(command)
+
+        for message in response["messages"]:
+            print(message)
+
     def status(self, names):
 
         command = {

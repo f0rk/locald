@@ -48,6 +48,11 @@ class App(object):
 
         stop_parser.add_argument("name")
 
+        restart_parser = subparsers.add_parser("restart")
+        restart_parser.set_defaults(func=self.restart)
+
+        restart_parser.add_argument("name")
+
         status_parser = subparsers.add_parser("status")
         status_parser.set_defaults(func=self.status)
 
@@ -91,6 +96,10 @@ class App(object):
     def stop(self, config, args):
         client = Client(config)
         client.stop(args.name)
+
+    def restart(self, config, args):
+        client = Client(config)
+        client.restart(args.name)
 
     def status(self, config, args):
         client = Client(config)
