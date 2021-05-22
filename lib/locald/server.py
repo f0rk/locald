@@ -267,6 +267,21 @@ class Server(object):
             "messages": [message],
         }
 
+    def handle_restart(self, command):
+
+        name = command["name"]
+
+        if name not in self.processes:
+            return self.handle_start(command)
+        else:
+            self.processes[name].restart()
+
+            message = "restarted '{}'".format(name)
+
+        return {
+            "messages": [message],
+        }
+
     def get_service_status(self, name):
 
         if name not in self.config:
@@ -280,18 +295,18 @@ class Server(object):
             status = "NOT_STARTED"
 
         return status
-    
+
     def handle_status(self, command):
 
         name = command["name"]
-        
+
         if name == "ALL":
             names = get_service_configs(self.config).keys()
         else:
             names = [name]
 
         status = {name: self.get_service_status(name) for name in names}
-        
+
         return status
 
     def handle_unknown(self, command):
