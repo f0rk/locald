@@ -94,9 +94,9 @@ class Client(object):
             "name": names,
         }
 
-        stati = self.send_command(command)
+        statuses = self.send_command(command)
 
-        names = list(stati.keys())
+        names = list(statuses.keys())
         names.sort()
         for name in names:
-            print("{}: {}".format(name, stati[name]))
+            print("{}: {}".format(name, statuses[name]))
