@@ -94,7 +94,9 @@ class Client(object):
             "name": names,
         }
 
-        response = self.send_command(command)
+        stati = self.send_command(command)
 
-        for message in response["messages"]:
-            print(message)
+        names = list(stati.keys())
+        names.sort()
+        for name in names:
+            print("{}: {}".format(name, stati[name]))
