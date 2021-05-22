@@ -270,8 +270,7 @@ class Server(object):
     def get_service_status(self, name):
 
         if name not in self.config:
-            "UNKNOWN_SERVICE"
-
+            status = "UNKNOWN_SERVICE"
         elif name in self.processes:
             if self.processes[name].is_running():
                 status = "RUNNING" # "service {} is running".format(name)
