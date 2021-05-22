@@ -9,7 +9,7 @@ import traceback
 
 from daemonize import Daemonize
 
-from .config import get_config_for_service
+from .config import get_config_for_service, get_service_configs
 from .service import Service
 
 
@@ -267,26 +267,32 @@ class Server(object):
             "messages": [message],
         }
 
+    def get_service_status(self, name):
+
+        if name not in self.config:
+            status = "UNKNOWN_SERVICE"
+        elif name in self.processes:
+            if self.processes[name].is_running():
+                status = "RUNNING"
+            else:
+                status = "STOPPED"
+        else:
+            status = "NOT_STARTED"
+
+        return status
+    
     def handle_status(self, command):
 
         name = command["name"]
-
-        if name not in self.config:
-            return {
-                "messages": ["unknown service '{}'".format(name)],
-            }
-
-        if name in self.processes:
-            if self.processes[name].is_running():
-                status = "service {} is running".format(name)
-            else:
-                status = "service {} is NOT running".format(name)
+        
+        if name == "ALL":
+            names = get_service_configs(self.config).keys()
         else:
-            status = "service {} is NOT running".format(name)
+            names = [name]
 
-        return {
-            "messages": [status],
-        }
+        status = {name: self.get_service_status(name) for name in names}
+        
+        return status
 
     def handle_unknown(self, command):
 

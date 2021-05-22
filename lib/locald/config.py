@@ -76,3 +76,14 @@ def get_config_for_service(config, name):
         service_config["log_path"] = log_path
 
     return service_config
+
+
+def get_service_configs(config):
+    
+    service_configs = {}
+    
+    for name, values in config.items():
+        if "service_path" in values:
+            service_configs[name] = get_config_for_service(config, name)
+    
+    return service_configs

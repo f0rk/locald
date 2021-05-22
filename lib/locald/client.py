@@ -94,7 +94,9 @@ class Client(object):
             "name": names,
         }
 
-        response = self.send_command(command)
+        statuses = self.send_command(command)
 
-        for message in response["messages"]:
-            print(message)
+        names = list(statuses.keys())
+        names.sort()
+        for name in names:
+            print("{}: {}".format(name, statuses[name]))
