@@ -116,7 +116,7 @@ class Server(object):
 
                         messages_queue[connection] = queue.Queue()
                     else:
-                        data = s.recv(1024)
+                        data = s.recv(1024 * 1024)
                         if data:
                             logger.debug(
                                 "[locald] received '{}' from {}"
