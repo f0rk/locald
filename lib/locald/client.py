@@ -36,7 +36,7 @@ class Client(object):
         data = self.prepare_data(command)
         sock.sendall(data)
 
-        raw_response = sock.recv(1024)  # XXX
+        raw_response = sock.recv(1024 * 1024)  # XXX
 
         return self.parse_response(raw_response)
 
