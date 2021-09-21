@@ -22,6 +22,13 @@ class App(object):
             help="path to locald configuration file",
         )
 
+        parser.add_argument(
+            "--quiet",
+            "-q",
+            help="reduce the amount of output a command produces",
+            action="store_true",
+        )
+
         subparsers = parser.add_subparsers(dest="command")
 
         server_start_parser = subparsers.add_parser("server-start")
@@ -91,15 +98,15 @@ class App(object):
 
     def start(self, config, args):
         client = Client(config)
-        client.start(args.name)
+        client.start(args.name, quiet=args.quiet)
 
     def stop(self, config, args):
         client = Client(config)
-        client.stop(args.name)
+        client.stop(args.name, quiet=args.quiet)
 
     def restart(self, config, args):
         client = Client(config)
-        client.restart(args.name)
+        client.restart(args.name, quiet=args.quiet)
 
     def status(self, config, args):
         client = Client(config)
@@ -115,7 +122,7 @@ class App(object):
 
             names = self.get_services(config, "ALL")
             for name in names:
-                client.stop(name)
+                client.stop(name, quiet=args.quiet)
 
             stop_server(config)
 
@@ -143,9 +150,10 @@ class App(object):
             log_paths.append(service_config["service"]["log_path"])
 
         if not log_paths:
-            sys.stderr.write("NO logs to tail\n")
-            sys.stderr.flush()
-            sys.exit(1)
+            if not args.quiet:
+                sys.stderr.write("NO logs to tail\n")
+                sys.stderr.flush()
+                sys.exit(1)
 
         tail_args = [
             "tail",

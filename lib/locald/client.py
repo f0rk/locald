@@ -63,7 +63,7 @@ class Client(object):
 
         return response
 
-    def start(self, name):
+    def start(self, name, quiet=False):
 
         command = {
             "command": "start",
@@ -73,9 +73,10 @@ class Client(object):
         response = self.send_command(command)
 
         for message in response["messages"]:
-            print(message)
+            if not quiet:
+                print(message)
 
-    def stop(self, name):
+    def stop(self, name, quiet=False):
 
         command = {
             "command": "stop",
@@ -85,9 +86,10 @@ class Client(object):
         response = self.send_command(command)
 
         for message in response["messages"]:
-            print(message)
+            if not quiet:
+                print(message)
 
-    def restart(self, name):
+    def restart(self, name, quiet=False):
 
         command = {
             "command": "restart",
@@ -97,7 +99,8 @@ class Client(object):
         response = self.send_command(command)
 
         for message in response["messages"]:
-            print(message)
+            if not quiet:
+                print(message)
 
     def status(self, names):
 
