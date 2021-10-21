@@ -5,6 +5,7 @@ import os
 import queue
 import select
 import socket
+import time
 import traceback
 
 from daemonize import Daemonize
@@ -251,8 +252,11 @@ class Server(object):
 
     def wait_for_socket_path(self):
         socket_path = self.config["locald"]["socket_path"]
+        start_time = time.time()
         while not os.path.isfile(socket_path):
-            pass
+            time.sleep(0.01)
+            if time.time() - start_time >= 10:
+                raise
 
     def handle_stop(self, command):
 
