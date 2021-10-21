@@ -256,7 +256,7 @@ class Server(object):
         while not os.path.isfile(socket_path):
             time.sleep(0.01)
             if time.time() - start_time >= 10:
-                raise
+                raise FileNotFoundError
 
     def handle_stop(self, command):
 
