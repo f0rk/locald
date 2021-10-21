@@ -342,7 +342,10 @@ def is_server_running(config):
     if not os.path.exists(config["locald"]["pid_path"]):
         return False
 
-    pid = get_pid(config["locald"]["pid_path"])
+    try:
+        pid = get_pid(config["locald"]["pid_path"])
+    except ValueError:
+        return False
 
     try:
         os.kill(pid, 0)
@@ -396,7 +399,10 @@ def stop_server(config):
     if not os.path.exists(config["locald"]["pid_path"]):
         return False
 
-    pid = get_pid(config["locald"]["pid_path"])
+    try:
+        pid = get_pid(config["locald"]["pid_path"])
+    except ValueError:
+        return False
 
     try:
         os.kill(pid, 2)
