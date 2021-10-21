@@ -47,7 +47,9 @@ class App(object):
         server_wait_parser.add_argument(
             "--timeout",
             "-t",
-            help="wait timeout",
+            help="wait timeout (in seconds)",
+            default=10,
+            type=float,
         )
         server_wait_parser.set_defaults(func=self.server_wait)
 
@@ -137,7 +139,7 @@ class App(object):
 
     def server_wait(self, config, args):
         start_time = time.time()
-        while time.time() - start_time < float(args.timeout):
+        while time.time() - start_time < args.timeout:
             if (
                 is_server_running(config)
                 and os.path.exists(config["locald"]["socket_path"])
