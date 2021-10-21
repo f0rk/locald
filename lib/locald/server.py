@@ -5,7 +5,6 @@ import os
 import queue
 import select
 import socket
-import time
 import traceback
 
 from daemonize import Daemonize
