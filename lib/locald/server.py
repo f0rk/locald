@@ -249,6 +249,11 @@ class Server(object):
 
         return messages, False
 
+    def wait_for_socket_path(self):
+        socket_path = self.config["locald"]["socket_path"]
+        while not os.path.isfile(socket_path):
+            pass
+
     def handle_stop(self, command):
 
         name = command["name"]
@@ -389,6 +394,7 @@ def ensure_server(config, args):
         else:
             daemon = create_daemon(config, server)
             daemon.start()
+            server.wait_for_socket_path()
 
 
 def stop_server(config):
