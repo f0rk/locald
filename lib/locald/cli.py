@@ -4,6 +4,7 @@ import argparse
 import os
 import shutil
 import sys
+import time
 
 from locald.client import Client
 from locald.config import get_config, get_config_for_service
@@ -41,6 +42,14 @@ class App(object):
 
         server_stop_parser = subparsers.add_parser("server-stop")
         server_stop_parser.set_defaults(func=self.server_stop)
+
+        server_wait_parser = subparsers.add_parser("server-wait")
+        server_wait_parser.add_argument(
+            "--timeout",
+            "-t",
+            help="wait timeout",
+        )
+        server_wait_parser.set_defaults(func=self.server_wait)
 
         server_status_parser = subparsers.add_parser("server-status")
         server_status_parser.set_defaults(func=self.server_status)
@@ -125,6 +134,20 @@ class App(object):
                 client.stop(name, quiet=args.quiet)
 
             stop_server(config)
+
+    def server_wait(self, config, args):
+        start_time = time.time()
+        while time.time() - start_time < float(args.timeout):
+            if (
+                is_server_running(config)
+                and os.path.exists(config["locald"]["socket_path"])
+            ):
+                return
+
+            time.sleep(0.1)
+
+        raise Exception("Timeout while waiting for the server")
+
 
     def server_status(self, config, args):
         if is_server_running(config):
