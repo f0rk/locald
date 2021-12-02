@@ -79,6 +79,11 @@ class App(object):
         logs_parser = subparsers.add_parser("logs")
         logs_parser.set_defaults(func=self.logs)
 
+        logs_parser.add_argument(
+            "--no-follow",
+            action="store_true",
+        )
+
         logs_parser.add_argument("names")
 
         args = parser.parse_args()
@@ -182,8 +187,10 @@ class App(object):
 
         tail_args = [
             "tail",
-            "-F",
         ]
+
+        if not args.no_follow:
+            tail_args.append("-F")
 
         tail_args.extend(log_paths)
 
