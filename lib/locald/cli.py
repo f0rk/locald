@@ -79,6 +79,11 @@ class App(object):
         logs_parser = subparsers.add_parser("logs")
         logs_parser.set_defaults(func=self.logs)
 
+        logs_parser.add_argument(
+            "--no-follow",
+            action="store_true",
+        )
+
         logs_parser.add_argument("names")
 
         args = parser.parse_args()
@@ -180,13 +185,18 @@ class App(object):
                 sys.stderr.flush()
                 sys.exit(1)
 
-        tail_args = [
-            "tail",
-            "-F",
-        ]
+        if args.no_follow:
+            exec_args = [
+                "cat",
+            ]
+        else:
+            exec_args = [
+                "tail",
+                "-F",
+            ]
 
-        tail_args.extend(log_paths)
+        exec_args.extend(log_paths)
 
-        exec_path = shutil.which(tail_args[0])
+        exec_path = shutil.which(exec_args[0])
 
-        os.execv(exec_path, tail_args)
+        os.execv(exec_path, exec_args)
