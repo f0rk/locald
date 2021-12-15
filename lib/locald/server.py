@@ -206,19 +206,20 @@ class Server(object):
     def handle_start(self, command):
 
         name = command["name"]
+        dependencies_only = command.get("dependencies_only", False)
 
         if name not in self.config:
             return {
                 "messages": ["unknown service '{}'".format(name)],
             }
 
-        messages, _ = self.start_service(name)
+        messages, _ = self.start_service(name, dependencies_only)
 
         return {
             "messages": messages,
         }
 
-    def start_service(self, name):
+    def start_service(self, name, dependencies_only=False):
 
         service_config = get_config_for_service(self.config, name)
 
@@ -239,13 +240,15 @@ class Server(object):
             if is_error:
                 return messages, True
 
-        if name not in self.processes:
-            proc = Service(name, service_config)
-            self.processes[name] = proc
+        if not dependencies_only:
 
-        self.processes[name].start()
+            if name not in self.processes:
+                proc = Service(name, service_config)
+                self.processes[name] = proc
 
-        messages.append("started '{}'".format(name))
+            self.processes[name].start()
+
+            messages.append("started '{}'".format(name))
 
         return messages, False
 
