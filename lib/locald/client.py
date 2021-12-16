@@ -63,11 +63,12 @@ class Client(object):
 
         return response
 
-    def start(self, name, quiet=False):
+    def start(self, name, quiet=False, dependencies_only=False):
 
         command = {
             "command": "start",
             "name": name,
+            "dependencies_only": dependencies_only,
         }
 
         response = self.send_command(command)

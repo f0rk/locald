@@ -61,6 +61,12 @@ class App(object):
 
         start_parser.add_argument("name")
 
+        start_parser.add_argument(
+            "--dependencies-only",
+            help="only start dependencies",
+            action="store_true",
+        )
+
         stop_parser = subparsers.add_parser("stop")
         stop_parser.set_defaults(func=self.stop)
 
@@ -114,7 +120,7 @@ class App(object):
 
     def start(self, config, args):
         client = Client(config)
-        client.start(args.name, quiet=args.quiet)
+        client.start(args.name, quiet=args.quiet, dependencies_only=args.dependencies_only)
 
     def stop(self, config, args):
         client = Client(config)
