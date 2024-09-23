@@ -38,7 +38,13 @@ class Client(object):
 
         raw_response = sock.recv(1024 * 1024)  # XXX
 
-        return self.parse_response(raw_response)
+        try:
+            return self.parse_response(raw_response)
+        except Exception as ex:
+            raise Exception(
+                "failed to parse response from command {!r}"
+                .format(command)
+            ) from ex
 
     def send_command(self, command):
 

@@ -153,9 +153,14 @@ class Server(object):
                             .format(s)
                         )
                     except queue.Empty:
+                        try:
+                            peer = s.getpeername()
+                        except OSError:
+                            peer = None
+
                         logger.info(
                             "[locald] output queue for {} is empty"
-                            .format(s.getpeername())
+                            .format(peer)
                         )
                         outputs.remove(s)
                     else:
@@ -166,9 +171,14 @@ class Server(object):
                         s.send(response)
 
                 for s in exceptional:
+                    try:
+                        peer = s.getpeername()
+                    except OSError:
+                        peer = None
+
                     logger.info(
                         "[locald] handling exceptional condition for {}"
-                        .format(s.getpeername())
+                        .format(peer)
                     )
                     inputs.remove(s)
                     if s in outputs:
