@@ -3,6 +3,7 @@ import logging
 import shlex
 import signal
 import subprocess
+import time
 
 import psutil
 
@@ -96,7 +97,7 @@ class Service(object):
 
         return self.process.poll()
 
-    def kill(self):
+    def kill(self, timeout=5):
         if self.process is None:
             return
 
@@ -104,10 +105,45 @@ class Service(object):
         to_kill = parent.children(recursive=True)
         to_kill.append(parent)
 
+        # First, try SIGTERM for graceful shutdown
+        logger.info(
+            "[locald] sending SIGTERM to service {} (pid {})"
+            .format(self.name, self.process.pid)
+        )
         for p in to_kill:
-            p.send_signal(signal.SIGKILL)
+            try:
+                p.send_signal(signal.SIGTERM)
+            except psutil.NoSuchProcess:
+                pass
 
-        self.process.kill()
+        # Wait for processes to terminate gracefully
+        start_time = time.time()
+        still_alive = list(to_kill)
+        
+        while still_alive and (time.time() - start_time) < timeout:
+            still_alive = [p for p in still_alive if p.is_running()]
+            if still_alive:
+                time.sleep(0.1)
+        
+        # If any processes are still alive, send SIGKILL
+        if still_alive:
+            logger.info(
+                "[locald] sending SIGKILL to service {} (pid {}) - graceful shutdown timed out"
+                .format(self.name, self.process.pid)
+            )
+            for p in still_alive:
+                try:
+                    p.send_signal(signal.SIGKILL)
+                except psutil.NoSuchProcess:
+                    pass
+            
+            self.process.kill()
+        else:
+            logger.info(
+                "[locald] service {} (pid {}) terminated gracefully"
+                .format(self.name, self.process.pid)
+            )
+
         self.was_killed = True
 
     def is_running(self):
