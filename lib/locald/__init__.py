@@ -1,3 +1,3 @@
-# Copyright 2020, Ryan P. Kelly.
+# Copyright 2020-2024, Ryan P. Kelly.
 
-__version__ = "0.5"
+__version__ = "1.5"

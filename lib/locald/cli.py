@@ -4,6 +4,7 @@ import argparse
 import os
 import shutil
 import sys
+import time
 
 from locald.client import Client
 from locald.config import get_config, get_config_for_service
@@ -22,6 +23,13 @@ class App(object):
             help="path to locald configuration file",
         )
 
+        parser.add_argument(
+            "--quiet",
+            "-q",
+            help="reduce the amount of output a command produces",
+            action="store_true",
+        )
+
         subparsers = parser.add_subparsers(dest="command")
 
         server_start_parser = subparsers.add_parser("server-start")
@@ -35,6 +43,16 @@ class App(object):
         server_stop_parser = subparsers.add_parser("server-stop")
         server_stop_parser.set_defaults(func=self.server_stop)
 
+        server_wait_parser = subparsers.add_parser("server-wait")
+        server_wait_parser.add_argument(
+            "--timeout",
+            "-t",
+            help="wait timeout (in seconds)",
+            default=10,
+            type=float,
+        )
+        server_wait_parser.set_defaults(func=self.server_wait)
+
         server_status_parser = subparsers.add_parser("server-status")
         server_status_parser.set_defaults(func=self.server_status)
 
@@ -43,10 +61,21 @@ class App(object):
 
         start_parser.add_argument("name")
 
+        start_parser.add_argument(
+            "--dependencies-only",
+            help="only start dependencies",
+            action="store_true",
+        )
+
         stop_parser = subparsers.add_parser("stop")
         stop_parser.set_defaults(func=self.stop)
 
         stop_parser.add_argument("name")
+
+        restart_parser = subparsers.add_parser("restart")
+        restart_parser.set_defaults(func=self.restart)
+
+        restart_parser.add_argument("name")
 
         status_parser = subparsers.add_parser("status")
         status_parser.set_defaults(func=self.status)
@@ -55,6 +84,11 @@ class App(object):
 
         logs_parser = subparsers.add_parser("logs")
         logs_parser.set_defaults(func=self.logs)
+
+        logs_parser.add_argument(
+            "--no-follow",
+            action="store_true",
+        )
 
         logs_parser.add_argument("names")
 
@@ -86,11 +120,15 @@ class App(object):
 
     def start(self, config, args):
         client = Client(config)
-        client.start(args.name)
+        client.start(args.name, quiet=args.quiet, dependencies_only=args.dependencies_only)
 
     def stop(self, config, args):
         client = Client(config)
-        client.stop(args.name)
+        client.stop(args.name, quiet=args.quiet)
+
+    def restart(self, config, args):
+        client = Client(config)
+        client.restart(args.name, quiet=args.quiet)
 
     def status(self, config, args):
         client = Client(config)
@@ -106,9 +144,23 @@ class App(object):
 
             names = self.get_services(config, "ALL")
             for name in names:
-                client.stop(name)
+                client.stop(name, quiet=args.quiet)
 
             stop_server(config)
+
+    def server_wait(self, config, args):
+        start_time = time.time()
+        while time.time() - start_time < args.timeout:
+            if (
+                is_server_running(config)
+                and os.path.exists(config["locald"]["socket_path"])
+            ):
+                return
+
+            time.sleep(0.1)
+
+        raise Exception("Timeout while waiting for the server")
+
 
     def server_status(self, config, args):
         if is_server_running(config):
@@ -134,17 +186,23 @@ class App(object):
             log_paths.append(service_config["service"]["log_path"])
 
         if not log_paths:
-            sys.stderr.write("NO logs to tail\n")
-            sys.stderr.flush()
-            sys.exit(1)
+            if not args.quiet:
+                sys.stderr.write("NO logs to tail\n")
+                sys.stderr.flush()
+                sys.exit(1)
 
-        tail_args = [
-            "tail",
-            "-F",
-        ]
+        if args.no_follow:
+            exec_args = [
+                "cat",
+            ]
+        else:
+            exec_args = [
+                "tail",
+                "-F",
+            ]
 
-        tail_args.extend(log_paths)
+        exec_args.extend(log_paths)
 
-        exec_path = shutil.which(tail_args[0])
+        exec_path = shutil.which(exec_args[0])
 
-        os.execv(exec_path, tail_args)
+        os.execv(exec_path, exec_args)

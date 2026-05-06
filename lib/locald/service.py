@@ -82,9 +82,6 @@ class Service(object):
                 "stderr": subprocess.STDOUT,
             }
 
-        #if self.name == "backend":
-        #    raise Exception(popen_args)
-
         args = shlex.split(self.config["service"]["command"])
         self.process = subprocess.Popen(
             args,
@@ -118,3 +115,8 @@ class Service(object):
             return False
 
         return self.get_returncode() is None
+
+    def restart(self):
+        self.kill()
+        self.tend()
+        self.start()

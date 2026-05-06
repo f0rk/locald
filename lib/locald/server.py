@@ -9,7 +9,7 @@ import traceback
 
 from daemonize import Daemonize
 
-from .config import get_config_for_service
+from .config import get_config_for_service, get_service_configs
 from .service import Service
 
 
@@ -116,7 +116,7 @@ class Server(object):
 
                         messages_queue[connection] = queue.Queue()
                     else:
-                        data = s.recv(1024)
+                        data = s.recv(1024 * 1024)
                         if data:
                             logger.debug(
                                 "[locald] received '{}' from {}"
@@ -153,9 +153,14 @@ class Server(object):
                             .format(s)
                         )
                     except queue.Empty:
+                        try:
+                            peer = s.getpeername()
+                        except OSError:
+                            peer = None
+
                         logger.info(
                             "[locald] output queue for {} is empty"
-                            .format(s.getpeername())
+                            .format(peer)
                         )
                         outputs.remove(s)
                     else:
@@ -166,9 +171,14 @@ class Server(object):
                         s.send(response)
 
                 for s in exceptional:
+                    try:
+                        peer = s.getpeername()
+                    except OSError:
+                        peer = None
+
                     logger.info(
                         "[locald] handling exceptional condition for {}"
-                        .format(s.getpeername())
+                        .format(peer)
                     )
                     inputs.remove(s)
                     if s in outputs:
@@ -191,6 +201,8 @@ class Server(object):
                 response = self.handle_start(data)
             elif command == "stop":
                 response = self.handle_stop(data)
+            elif command == "restart":
+                response = self.handle_restart(data)
             elif command == "status":
                 response = self.handle_status(data)
             else:
@@ -204,19 +216,20 @@ class Server(object):
     def handle_start(self, command):
 
         name = command["name"]
+        dependencies_only = command.get("dependencies_only", False)
 
         if name not in self.config:
             return {
                 "messages": ["unknown service '{}'".format(name)],
             }
 
-        messages, _ = self.start_service(name)
+        messages, _ = self.start_service(name, dependencies_only)
 
         return {
             "messages": messages,
         }
 
-    def start_service(self, name):
+    def start_service(self, name, dependencies_only=False):
 
         service_config = get_config_for_service(self.config, name)
 
@@ -237,13 +250,15 @@ class Server(object):
             if is_error:
                 return messages, True
 
-        if name not in self.processes:
-            proc = Service(name, service_config)
-            self.processes[name] = proc
+        if not dependencies_only:
 
-        self.processes[name].start()
+            if name not in self.processes:
+                proc = Service(name, service_config)
+                self.processes[name] = proc
 
-        messages.append("started '{}'".format(name))
+            self.processes[name].start()
+
+            messages.append("started '{}'".format(name))
 
         return messages, False
 
@@ -267,26 +282,47 @@ class Server(object):
             "messages": [message],
         }
 
+    def handle_restart(self, command):
+
+        name = command["name"]
+
+        if name not in self.processes:
+            return self.handle_start(command)
+        else:
+            self.processes[name].restart()
+
+            message = "restarted '{}'".format(name)
+
+        return {
+            "messages": [message],
+        }
+
+    def get_service_status(self, name):
+
+        if name not in self.config:
+            status = "UNKNOWN_SERVICE"
+        elif name in self.processes:
+            if self.processes[name].is_running():
+                status = "RUNNING"
+            else:
+                status = "STOPPED"
+        else:
+            status = "NOT_STARTED"
+
+        return status
+
     def handle_status(self, command):
 
         name = command["name"]
 
-        if name not in self.config:
-            return {
-                "messages": ["unknown service '{}'".format(name)],
-            }
-
-        if name in self.processes:
-            if self.processes[name].is_running():
-                status = "service {} is running".format(name)
-            else:
-                status = "service {} is NOT running".format(name)
+        if name == "ALL":
+            names = get_service_configs(self.config).keys()
         else:
-            status = "service {} is NOT running".format(name)
+            names = [name]
 
-        return {
-            "messages": [status],
-        }
+        status = {name: self.get_service_status(name) for name in names}
+
+        return status
 
     def handle_unknown(self, command):
 
@@ -319,7 +355,10 @@ def is_server_running(config):
     if not os.path.exists(config["locald"]["pid_path"]):
         return False
 
-    pid = get_pid(config["locald"]["pid_path"])
+    try:
+        pid = get_pid(config["locald"]["pid_path"])
+    except ValueError:
+        return False
 
     try:
         os.kill(pid, 0)
@@ -373,7 +412,10 @@ def stop_server(config):
     if not os.path.exists(config["locald"]["pid_path"]):
         return False
 
-    pid = get_pid(config["locald"]["pid_path"])
+    try:
+        pid = get_pid(config["locald"]["pid_path"])
+    except ValueError:
+        return False
 
     try:
         os.kill(pid, 2)

@@ -36,9 +36,15 @@ class Client(object):
         data = self.prepare_data(command)
         sock.sendall(data)
 
-        raw_response = sock.recv(1024)  # XXX
+        raw_response = sock.recv(1024 * 1024)  # XXX
 
-        return self.parse_response(raw_response)
+        try:
+            return self.parse_response(raw_response)
+        except Exception as ex:
+            raise Exception(
+                "failed to parse response from command {!r}"
+                .format(command)
+            ) from ex
 
     def send_command(self, command):
 
@@ -63,19 +69,21 @@ class Client(object):
 
         return response
 
-    def start(self, name):
+    def start(self, name, quiet=False, dependencies_only=False):
 
         command = {
             "command": "start",
             "name": name,
+            "dependencies_only": dependencies_only,
         }
 
         response = self.send_command(command)
 
         for message in response["messages"]:
-            print(message)
+            if not quiet:
+                print(message)
 
-    def stop(self, name):
+    def stop(self, name, quiet=False):
 
         command = {
             "command": "stop",
@@ -85,7 +93,21 @@ class Client(object):
         response = self.send_command(command)
 
         for message in response["messages"]:
-            print(message)
+            if not quiet:
+                print(message)
+
+    def restart(self, name, quiet=False):
+
+        command = {
+            "command": "restart",
+            "name": name,
+        }
+
+        response = self.send_command(command)
+
+        for message in response["messages"]:
+            if not quiet:
+                print(message)
 
     def status(self, names):
 
@@ -94,7 +116,9 @@ class Client(object):
             "name": names,
         }
 
-        response = self.send_command(command)
+        statuses = self.send_command(command)
 
-        for message in response["messages"]:
-            print(message)
+        names = list(statuses.keys())
+        names.sort()
+        for name in names:
+            print("{}: {}".format(name, statuses[name]))
