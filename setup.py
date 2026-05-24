@@ -1,11 +1,11 @@
-# Copyright 2020-2024, Ryan P. Kelly.
+# Copyright 2020-2026, Ryan P. Kelly.
 
 from setuptools import setup
 
 
 setup(
     name="locald",
-    version="1.5",
+    version="1.6",
     description="run local services/microservices for development",
     author="Ryan P. Kelly",
     author_email="ryan@ryankelly.us",

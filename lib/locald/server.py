@@ -127,10 +127,13 @@ class Server(object):
                             if s not in outputs:
                                 outputs.append(s)
                         else:
-                            logger.info(
-                                "[locald] closing {} after reading no data"
-                                .format(s.getpeername())
-                            )
+                            try:
+                                logger.info(
+                                    "[locald] closing {} after reading no data"
+                                    .format(s.getpeername())
+                                )
+                            except OSError:
+                                logger.info("[locald] closing socket after reading no data")
 
                             if s in outputs:
                                 outputs.remove(s)
